@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { 
   BG_PURPLE, YELLOW_LEMON, VIOLET_LEMON, 
-  FONT_HEADLINE, FONT_SERIF,
-  SliceData, DisplaySliceData, Screen, notifyStorageChange 
-} from './types.tsx';
+  FONT_HEADLINE, FONT_SERIF, notifyStorageChange
+} from './types';
+import type { SliceData, DisplaySliceData, Screen } from './types';
 
 
 // Simulación de cotizaciones de criptomonedas (para el cálculo de USD)

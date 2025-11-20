@@ -3,11 +3,11 @@ import { ArrowLeft, ChevronDown, Download, Upload, Trash2, Edit } from 'lucide-r
 
 // Importa los tipos y constantes (Corregida la ruta de importación a './types.ts')
 import { 
-    BG_PURPLE, YELLOW_LEMON, VIOLET_LEMON, CURRENCIES, 
-    FONT_HEADLINE, 
-    SliceData, DisplaySliceData, Screen, 
-    notifyStorageChange 
-} from './types.tsx';
+  BG_PURPLE, YELLOW_LEMON, VIOLET_LEMON, CURRENCIES, 
+  FONT_HEADLINE, 
+  notifyStorageChange 
+} from './types';
+import type { SliceData, DisplaySliceData, Screen } from './types';
 
 // Importa las pantallas modulares
 import Inicio from './inicio';

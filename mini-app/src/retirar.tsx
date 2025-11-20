@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 // CORREGIDO: Eliminada la extensión .ts del import para permitir la resolución correcta del módulo
-import { BG_PURPLE, YELLOW_LEMON, FONT_HEADLINE, SliceData, Screen, notifyStorageChange } from './types.tsx'; 
+import { BG_PURPLE, YELLOW_LEMON, FONT_HEADLINE, notifyStorageChange } from './types'; 
+import type { SliceData, Screen } from './types'; 
 
 // Componente para mostrar mensajes (éxito y error)
 const MessageModal: React.FC<{ 
