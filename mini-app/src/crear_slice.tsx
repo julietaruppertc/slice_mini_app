@@ -61,24 +61,14 @@ const CrearSlice: React.FC<CrearSliceProps> = ({ navigate }) => {
   const handleCreateSlice = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validaciones
-    if (!formData.nombre) {
-        alert("Por favor escribe un nombre");
-        return;
-    }
-    if (!formData.moneda) {
-        alert("Por favor selecciona una moneda");
-        return;
-    }
-    if (!formData.meta || parseFloat(formData.meta) <= 0) {
-        alert("La meta debe ser mayor a 0");
-        return;
-    }
+    // Validaciones básicas
+    if (!formData.nombre) { alert("Por favor escribe un nombre"); setIsLoading(false); return; }
+    if (!formData.moneda) { alert("Por favor selecciona una moneda"); setIsLoading(false); return; }
+    if (!formData.meta || parseFloat(formData.meta) <= 0) { alert("La meta debe ser mayor a 0"); setIsLoading(false); return; }
 
     setIsLoading(true);
 
     const montoInicialNum = parseFloat(formData.montoInicial) || 0;
-
     const newSlice = {
       ...formData,
       meta: parseFloat(formData.meta),
@@ -88,42 +78,68 @@ const CrearSlice: React.FC<CrearSliceProps> = ({ navigate }) => {
     };
 
     try {
-      // 1. Guardar en localStorage
+      // 1. Validar saldo suficiente si hay monto inicial
+      if (montoInicialNum > 0) {
+        if (!wallet) {
+          alert("No tienes wallet conectada");
+          setIsLoading(false);
+          return;
+        }
+
+        let balance = 0;
+
+        if (formData.moneda === "ARS") {
+          // Para ARS, usamos un saldo simulado en localStorage
+          balance = parseFloat(localStorage.getItem('walletARS') || '0');
+        } else {
+          // Para cripto/stablecoins, pedimos saldo real (ejemplo)
+          const balanceResult = await fetch(`/api/getWalletBalance?wallet=${wallet}&token=${formData.moneda}`);
+          balance = await balanceResult.json();
+        }
+
+        if (balance < montoInicialNum) {
+          alert("No tienes saldo suficiente para este depósito inicial");
+          setIsLoading(false);
+          return;
+        }
+
+        // 2. Realizar depósito solo para cripto/stablecoins
+        if (formData.moneda !== "ARS") {
+          const result = await deposit({
+            amount: montoInicialNum.toString(),
+            tokenName: newSlice.moneda as any,
+          });
+
+          if (result.result !== TransactionResult.SUCCESS) {
+            alert("Depósito fallido. No se creó el slice.");
+            setIsLoading(false);
+            return;
+          }
+        } else {
+          // Para ARS, descontamos saldo simulado
+          localStorage.setItem('walletARS', (balance - montoInicialNum).toString());
+        }
+      }
+
+      // 3. Guardar slice solo si depósito exitoso o monto inicial = 0
       const existing = JSON.parse(localStorage.getItem('slices') || '[]');
       existing.push(newSlice);
       localStorage.setItem('slices', JSON.stringify(existing));
 
-      // 2. DEPOSITAR EN LEMON (si puso monto inicial)
-      if (montoInicialNum > 0) {
-        try {
-          const result = await deposit({
-            amount: montoInicialNum.toString(),
-            tokenName: newSlice.moneda as any, // Casteo simple para evitar error de tipos estrictos del SDK
-          });
-
-          if (result.result !== TransactionResult.SUCCESS) {
-            console.error('Depósito fallido o cancelado');
-            // Opcional: Podrías mostrar un error aquí, pero el slice ya se creó localmente
-          }
-        } catch (err) {
-          console.error('Error técnico durante el depósito:', err);
-        }
-      }
-
-      // Éxito total
       setIsLoading(false);
       setShowModal(true);
 
     } catch (err) {
       setIsLoading(false);
-      console.error('Error guardando slice:', err);
+      console.error('Error creando slice:', err);
       alert("Hubo un error al crear el Slice");
     }
   };
 
-  const handleAceptar = () => {
-    navigate('inicio'); 
-  };
+
+    const handleAceptar = () => {
+      navigate('inicio'); 
+    };
 
   // ------------------------------------------
   // AQUÍ CONECTAMOS LAS VARIABLES AL HTML
@@ -166,6 +182,7 @@ const CrearSlice: React.FC<CrearSliceProps> = ({ navigate }) => {
                     <option value="USDT">USDT</option>
                     <option value="ETH">ETH</option>
                     <option value="BTC">BTC</option>
+                    <option value="ARS">Pesos (ARS)</option> 
                 </select>
                 <ChevronDown className="absolute right-3 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />
             </div>
