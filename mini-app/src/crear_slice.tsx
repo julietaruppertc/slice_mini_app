@@ -14,8 +14,8 @@ const YELLOW_LEMON = '#F0EE00';
 interface NewSliceData {
   nombre: string;
   moneda: string; // id_divisa de la moneda seleccionada
-  meta: number | '';
-  montoInicial: number | '';
+  meta: string;
+  montoInicial: string;
 }
 
 // --- Componentes Reutilizables ---
