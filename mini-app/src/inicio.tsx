@@ -4,7 +4,6 @@ import {
   BG_PURPLE, YELLOW_LEMON, VIOLET_LEMON, 
   FONT_HEADLINE, FONT_SERIF, notifyStorageChange,
   // Asumiendo que hay un color para el progreso menor a 100% y un gris para el fondo
-  GRAY_LIGHT, GREEN_SUCCESS 
 } from './types';
 import type { SliceData, DisplaySliceData, Screen } from './types';
 

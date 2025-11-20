@@ -11,6 +11,7 @@ export const FONT_SERIF = 'serif'; // Simulación de "Stack Sans Serif"
 export interface SliceData {
   id_reserva: string;
   nombre: string;
+  meta: number;   
   moneda: string; 
   montoInicial: number; 
   timestamp: string;
