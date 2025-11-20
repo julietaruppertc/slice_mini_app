@@ -78,50 +78,21 @@ const CrearSlice: React.FC<CrearSliceProps> = ({ navigate }) => {
     };
 
     try {
-      // 1. Validar saldo suficiente si hay monto inicial
-      if (montoInicialNum > 0) {
-        if (!wallet) {
-          alert("No tienes wallet conectada");
+      // Solo intentamos el depósito si hay monto inicial y wallet conectada
+      if (montoInicialNum > 0 && wallet && formData.moneda !== "ARS") {
+        const result = await deposit({
+          amount: montoInicialNum.toString(),
+          tokenName: newSlice.moneda as any,
+        });
+
+        if (result.result !== TransactionResult.SUCCESS) {
+          alert("Depósito fallido. No se creó el slice.");
           setIsLoading(false);
           return;
-        }
-
-        let balance = 0;
-
-        if (formData.moneda === "ARS") {
-          // Para ARS, usamos un saldo simulado en localStorage
-          balance = parseFloat(localStorage.getItem('walletARS') || '0');
-        } else {
-          // Para cripto/stablecoins, pedimos saldo real (ejemplo)
-          const balanceResult = await fetch(`/api/getWalletBalance?wallet=${wallet}&token=${formData.moneda}`);
-          balance = await balanceResult.json();
-        }
-
-        if (balance < montoInicialNum) {
-          alert("No tienes saldo suficiente para este depósito inicial");
-          setIsLoading(false);
-          return;
-        }
-
-        // 2. Realizar depósito solo para cripto/stablecoins
-        if (formData.moneda !== "ARS") {
-          const result = await deposit({
-            amount: montoInicialNum.toString(),
-            tokenName: newSlice.moneda as any,
-          });
-
-          if (result.result !== TransactionResult.SUCCESS) {
-            alert("Depósito fallido. No se creó el slice.");
-            setIsLoading(false);
-            return;
-          }
-        } else {
-          // Para ARS, descontamos saldo simulado
-          localStorage.setItem('walletARS', (balance - montoInicialNum).toString());
         }
       }
 
-      // 3. Guardar slice solo si depósito exitoso o monto inicial = 0
+      // Guardar slice en localStorage
       const existing = JSON.parse(localStorage.getItem('slices') || '[]');
       existing.push(newSlice);
       localStorage.setItem('slices', JSON.stringify(existing));
@@ -137,13 +108,12 @@ const CrearSlice: React.FC<CrearSliceProps> = ({ navigate }) => {
   };
 
 
+
     const handleAceptar = () => {
       navigate('inicio'); 
     };
 
-  // ------------------------------------------
-  // AQUÍ CONECTAMOS LAS VARIABLES AL HTML
-  // ------------------------------------------
+ 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col p-4">
       {/* Header Simple */}
