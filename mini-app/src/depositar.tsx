@@ -5,7 +5,7 @@ import {
   deposit,
   isWebView,
   TransactionResult,
-} from '@lemoncash/mini-app-sdk';
+} from './lemon-sdk';
 
 import {
   BG_PURPLE,

@@ -3,7 +3,7 @@ import { BG_PURPLE } from './types'; // Asume que BG_PURPLE es el color morado
 import type { Screen } from './types';
 
 // Import del SVG guardado en assets
-import lemonSlice from "../assets/svg/lemon_slice.svg"; // El SVG del limón
+import lemonSlice from "./assets/lemon_slice.svg"; // El SVG del limón
 
 // const COLOR_PURPLE = '#806cf2'; 
 // const COLOR_YELLOW = '#f0ee00'; // Color amarillo dorado

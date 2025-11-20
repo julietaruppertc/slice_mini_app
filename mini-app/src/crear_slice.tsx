@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import type { Screen } from './types'; 
 
 // 2. CORRECCIÓN: El SDK NO lleva 'type' porque usas las funciones reales
-import { authenticate, deposit, TransactionResult } from '@lemoncash/mini-app-sdk';
+import { authenticate, deposit, TransactionResult } from './lemon-sdk';
 import { ArrowLeft, ChevronDown } from 'lucide-react'; // Asumo que usas iconos, si no, borra esta línea
 
 interface CrearSliceProps {

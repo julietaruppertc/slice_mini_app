@@ -15,7 +15,7 @@ import {
   withdraw,
   isWebView,
   TransactionResult,
-} from "@lemoncash/mini-app-sdk";
+} from "./lemon-sdk";
 
 // -------------------------------
 //  Modal — SIN CAMBIOS
