@@ -1,17 +1,15 @@
 import React, { useEffect } from 'react';
-import { BG_PURPLE } from './types'; // Asume que BG_PURPLE es el color morado
 import type { Screen } from './types';
 
-// Import del SVG guardado en assets
-import lemonSlice from "./assets/lemon_slice.svg"; // El SVG del limón
+// Importamos el SVG
+import lemonSlice from "./assets/lemon_slice.svg"; 
 
-// const COLOR_PURPLE = '#806cf2'; 
-// const COLOR_YELLOW = '#f0ee00'; // Color amarillo dorado
+// Importamos estilos in-line (objeto JS)
+import styles from './splashStyles';
 
 const SplashScreen: React.FC<{ navigate: (screen: Screen) => void }> = ({ navigate }) => {
 
     useEffect(() => {
-
         const timer = setTimeout(() => {
             navigate('inicio');
         }, 2000);
@@ -20,30 +18,12 @@ const SplashScreen: React.FC<{ navigate: (screen: Screen) => void }> = ({ naviga
     }, [navigate]);
 
     return (
-        <div
-            style={{
-                width: "100vw",
-                height: "100dvh", 
-                backgroundColor: BG_PURPLE, 
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-            }}
-        >
-            
-            <img
-                src={lemonSlice}
-                alt="Logo Rodaja de Limón"
-                style={{
-                    width: "40vw", 
-                    height: "40vw",
-                    maxWidth: 200, 
-                    maxHeight: 200,
-                 
-                }}
-            />
+        <div style={styles.splashContainer}>
+            <p>pepe</p>
         </div>
     );
 };
 
 export default SplashScreen;
+
+

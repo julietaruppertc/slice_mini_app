@@ -1,5 +1,5 @@
 // --- Constantes y Colores de Diseño ---
-export const BG_PURPLE = '#806CF2';
+export const BG_PURPLE = '#5E2CBA';
 export const VIOLET_LEMON = '#5E2CBA';
 export const YELLOW_LEMON = '#F0EE00';
 export const CURRENCIES = ['ARS', 'USD', 'ETH', 'BTC', 'USDC', 'USDT', 'DAI', 'POL'];

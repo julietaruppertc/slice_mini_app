@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { HeartIcon, Plus } from 'lucide-react';
 import { 
   BG_PURPLE, YELLOW_LEMON, VIOLET_LEMON, 
   FONT_HEADLINE, FONT_SERIF, notifyStorageChange,
@@ -172,19 +172,10 @@ const InicioScreen: React.FC<{ navigate: (screen: Screen, data?: DisplaySliceDat
 
 
   return (
-    <div className="min-h-screen p-4 flex flex-col items-center" style={{ backgroundColor: BG_PURPLE }}>
-      <header className="w-full max-w-md pt-4 mb-4">
-        {/* Podrías querer un logo o un título simple aquí, aunque no está en la imagen,
-            lo dejo por si el `BG_PURPLE` es parte de un contenedor mayor.
-        <h1 
-          className="text-5xl font-extrabold text-center"
-          style={{ color: YELLOW_LEMON, fontFamily: FONT_HEADLINE }}
-        >
-          Slice
-        </h1> */}
-      </header>
+    <div  style={{ minHeight: '100vh', backgroundColor: BG_PURPLE, padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignContent: 'center', alignItems: 'center' }}>
+      
 
-      <div className="w-full max-w-md flex flex-col space-y-6">
+      <div>
         
         {/* Botón Principal para Crear Slice - Estilo de la imagen */}
         <div className="flex justify-center mb-4">
@@ -198,7 +189,7 @@ const InicioScreen: React.FC<{ navigate: (screen: Screen, data?: DisplaySliceDat
         </div>
 
         {/* Lista de Slices (Sin el título "Mis Reservas" para seguir el diseño) */}
-        <div className="space-y-4 pt-2">
+        <div className="space-y-4 pt-2" style={{ minHeight: '100%' }}>
           {loading ? (
             <p className="text-white/70 text-center">Cargando Slices...</p>
           ) : slices.length === 0 ? (
