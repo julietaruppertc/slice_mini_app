@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { BG_PURPLE, YELLOW_LEMON, VIOLET_LEMON, FONT_HEADLINE, notifyStorageChange } from './types'; // Corregida la importación
 import type { SliceData, Screen } from './types';
@@ -11,14 +11,14 @@ const MessageModal: React.FC<{
   buttonText: string;
   onClose: () => void 
 }> = ({ message, title, icon, buttonText, onClose }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div className="bg-white p-6 rounded-3xl shadow-2xl max-w-sm w-full text-center">
-      <div className="text-4xl mb-4">{icon}</div>
-      <h3 className="text-xl font-bold text-violet-800 mb-2">{title}</h3>
-      <p className="text-gray-600 mb-6">{message}</p>
+  <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
+    <div style={{ backgroundColor: '#fff', padding: 24, borderRadius: 24, boxShadow: '0 10px 30px rgba(0,0,0,0.18)', maxWidth: 400, width: '100%', textAlign: 'center' }}>
+      <div style={{ fontSize: 32, marginBottom: 16 }}>{icon}</div>
+      <h3 style={{ fontSize: 18, fontWeight: 700, color: VIOLET_LEMON, marginBottom: 8 }}>{title}</h3>
+      <p style={{ color: '#4B5563', marginBottom: 24 }}>{message}</p>
       <button
         onClick={onClose}
-        className="w-full p-3 rounded-xl bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition"
+        style={{ width: '100%', padding: 12, borderRadius: 12, backgroundColor: YELLOW_LEMON, color: '#000', fontWeight: 600, border: 'none', cursor: 'pointer' }}
       >
         {buttonText}
       </button>
@@ -47,19 +47,19 @@ const EditInput: React.FC<{ label: string; value: string; onChange: (value: stri
     };
 
     return (
-        <div className="relative bg-white rounded-xl h-[60px] flex items-center shadow-md overflow-hidden">
-            <span className="p-4 font-semibold text-lg flex-shrink-0" style={{ color: VIOLET_LEMON }}>{label}</span>
-            <input 
-                type={inputType} 
-                value={value} 
-                onChange={handleInternalChange}
-                placeholder={isNumber ? '0.00' : `Escribe el ${label.toLowerCase()}`}
-                className="flex-grow p-4 text-right h-full focus:outline-none text-gray-900 font-semibold"
-            />
-            {isNumber && currency && (
-                <span className="pr-4 text-lg font-semibold text-gray-700">{currency}</span>
-            )}
-        </div>
+      <div style={{ backgroundColor: '#fff', borderRadius: 12, height: 60, display: 'flex', alignItems: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+        <span style={{ padding: 16, fontWeight: 600, fontSize: 18, flexShrink: 0, color: VIOLET_LEMON }}>{label}</span>
+        <input 
+          type={inputType} 
+          value={value} 
+          onChange={handleInternalChange}
+          placeholder={isNumber ? '0.00' : `Escribe el ${label.toLowerCase()}`}
+          style={{ flex: 1, padding: 16, textAlign: 'right', height: '100%', outline: 'none', color: '#111827', fontWeight: 600, border: 'none', background: 'transparent' }}
+        />
+        {isNumber && currency && (
+          <span style={{ paddingRight: 16, fontSize: 18, fontWeight: 600, color: '#374151' }}>{currency}</span>
+        )}
+      </div>
     );
 };
 
@@ -111,12 +111,12 @@ const EditarScreen: React.FC<{ slice: SliceData; navigate: (screen: Screen, data
 
       // Simulación de tiempo de carga/API
       setTimeout(() => {
-        setIsLoading(false);
-        setModalState({
-            visible: true,
-            isSuccess: true,
-            message: `La Slice "${nombre}" ha sido actualizada exitosamente.`,
-        });
+      setIsLoading(false);
+      setModalState({
+        visible: true,
+        isSuccess: true,
+        message: `La Slice "${nombre}" ha sido actualizada exitosamente.`,
+      });
         
         // Actualiza el objeto slice en la navegación para que la pantalla de info refleje los cambios inmediatamente
         const updatedSliceData = updatedSlices.find(s => s.id_reserva === slice.id_reserva);
@@ -141,61 +141,38 @@ const EditarScreen: React.FC<{ slice: SliceData; navigate: (screen: Screen, data
     setModalState({ visible: false, isSuccess: false, message: '' });
   };
 
+  const containerStyle: React.CSSProperties = { minHeight: '100vh', padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: BG_PURPLE };
+  const headerStyle: React.CSSProperties = { width: '100%', maxWidth: 480, display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: 40, paddingTop: 16 };
+  const mainStyle: React.CSSProperties = { width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', alignItems: 'center' };
+  const formStyle: React.CSSProperties = { width: '100%', display: 'flex', flexDirection: 'column', gap: 16 };
+  const buttonStyle: React.CSSProperties = {
+    width: '100%', height: 60, padding: 16, marginTop: 32, borderRadius: 12, fontSize: 18, fontWeight: 700, boxShadow: '0 6px 18px rgba(0,0,0,0.12)', border: 'none', cursor: isLoading ? 'not-allowed' : 'pointer', backgroundColor: isLoading ? '#9CA3AF' : YELLOW_LEMON, color: isLoading ? '#374151' : '#000'
+  };
+
   return (
-    <div className="min-h-screen p-4 flex flex-col items-center" style={{ backgroundColor: BG_PURPLE }}>
-      <header className="w-full max-w-md flex justify-start items-center mb-10 pt-4">
-        <button onClick={handleGoBack} aria-label="Volver atrás"><ArrowLeft className="text-white w-7 h-7" /></button>
+    <div style={containerStyle}>
+      <header style={headerStyle}>
+        <button onClick={handleGoBack} aria-label="Volver atrás" style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}>
+          <ArrowLeft style={{ color: '#fff', width: 28, height: 28 }} />
+        </button>
       </header>
 
-      <div className="w-full max-w-md flex flex-col items-center">
-        {/* Título estático: Editar Slice */}
-        <h1 
-          className="text-4xl font-extrabold mb-10 text-center"
-          style={{ 
-            fontSize: '36px', 
-            color: YELLOW_LEMON, 
-            fontFamily: FONT_HEADLINE 
-          }}
-        >
+      <div style={mainStyle}>
+        <h1 style={{ fontSize: 36, color: YELLOW_LEMON, fontFamily: FONT_HEADLINE, fontWeight: 800, marginBottom: 40, textAlign: 'center' }}>
           Editar Slice
         </h1>
 
-        <form onSubmit={handleUpdate} className="w-full flex flex-col space-y-4">
-          
-          {/* Campo Nombre */}
-          <EditInput 
-            label="Nombre" 
-            value={nombre} 
-            onChange={setNombre} 
-          />
-          
-          {/* Campo Meta */}
-          <EditInput 
-            label="Meta" 
-            value={meta} 
-            onChange={setMeta}
-            isNumber={true}
-            currency={slice.moneda} // Muestra la abreviatura de la divisa
-          />
+        <form onSubmit={handleUpdate} style={formStyle}>
+          <EditInput label="Nombre" value={nombre} onChange={setNombre} />
 
-          {/* Botón de Edición */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={`
-              w-full h-[60px] p-4 mt-8 rounded-xl text-lg font-bold transition duration-300 shadow-xl
-              ${isLoading
-                ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
-                : 'bg-yellow-400 text-black hover:bg-yellow-500'
-              }
-            `}
-          >
+          <EditInput label="Meta" value={meta} onChange={setMeta} isNumber={true} currency={slice.moneda} />
+
+          <button type="submit" disabled={isLoading} style={buttonStyle}>
             {isLoading ? 'Guardando...' : 'Editar Slice'}
           </button>
         </form>
       </div>
-      
-      {/* Modal de Mensaje (Éxito o Error) */}
+
       {modalState.visible && (
         <MessageModal
           message={modalState.message}

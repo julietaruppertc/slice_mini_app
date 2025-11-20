@@ -10,6 +10,7 @@ import {
 import {
   BG_PURPLE,
   YELLOW_LEMON,
+  VIOLET_LEMON,
   FONT_HEADLINE,
   notifyStorageChange,
 } from './types';
@@ -23,14 +24,14 @@ const MessageModal: React.FC<{
   buttonText: string;
   onClose: () => void;
 }> = ({ message, title, icon, buttonText, onClose }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div className="bg-white p-6 rounded-3xl shadow-2xl max-w-sm w-full text-center">
-      <div className="text-4xl mb-4">{icon}</div>
-      <h3 className="text-xl font-bold text-violet-800 mb-2">{title}</h3>
-      <p className="text-gray-600 mb-6 whitespace-pre-line">{message}</p>
+  <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 50 }}>
+    <div style={{ backgroundColor: '#fff', padding: 24, borderRadius: 24, boxShadow: '0 10px 30px rgba(0,0,0,0.12)', maxWidth: 480, width: '100%', textAlign: 'center' }}>
+      <div style={{ fontSize: 32, marginBottom: 12 }}>{icon}</div>
+      <h3 style={{ fontSize: 18, fontWeight: 700, color: VIOLET_LEMON, marginBottom: 8 }}>{title}</h3>
+      <p style={{ color: '#4B5563', marginBottom: 18, whiteSpace: 'pre-line' }}>{message}</p>
       <button
         onClick={onClose}
-        className="w-full p-3 rounded-xl bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition"
+        style={{ width: '100%', padding: 12, borderRadius: 12, backgroundColor: YELLOW_LEMON, color: '#000', fontWeight: 600, border: 'none' }}
       >
         {buttonText}
       </button>
@@ -43,16 +44,16 @@ const SuccessRedirectModal: React.FC<{
   slice: SliceData;
   onConfirm: () => void;
 }> = ({ slice, onConfirm }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-    <div className="bg-white w-80 p-6 rounded-3xl shadow-xl text-center">
-      <h2 className="text-xl font-bold text-violet-800 mb-3">Depósito exitoso</h2>
-      <p className="text-gray-600 mb-6">
+  <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 50 }}>
+    <div style={{ backgroundColor: '#fff', width: 320, padding: 20, borderRadius: 24, boxShadow: '0 10px 30px rgba(0,0,0,0.12)', textAlign: 'center' }}>
+      <h2 style={{ fontSize: 18, fontWeight: 700, color: VIOLET_LEMON, marginBottom: 12 }}>Depósito exitoso</h2>
+      <p style={{ color: '#4B5563', marginBottom: 16 }}>
         Tu depósito en <strong>{slice.nombre}</strong> fue procesado correctamente.
       </p>
 
       <button
         onClick={onConfirm}
-        className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 rounded-xl transition active:scale-95"
+        style={{ width: '100%', backgroundColor: YELLOW_LEMON, padding: 12, borderRadius: 12, color: '#000', fontWeight: 600, border: 'none' }}
       >
         Aceptar
       </button>
@@ -181,7 +182,7 @@ const DepositarScreen: React.FC<{
 
   if (!isWebView()) {
     return (
-      <div className="text-white p-10 text-center">
+      <div style={{ color: '#fff', padding: 40, textAlign: 'center' }}>
         Esta Mini App solo funciona dentro de Lemon Cash.
       </div>
     );
@@ -189,12 +190,11 @@ const DepositarScreen: React.FC<{
 
   return (
     <div
-      className="min-h-screen p-4 flex flex-col items-center"
-      style={{ backgroundColor: BG_PURPLE }}
+      style={{ minHeight: '100vh', padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: BG_PURPLE }}
     >
-      <header className="w-full max-w-md flex justify-start items-center mb-20 pt-4">
-        <button onClick={handleGoBack}>
-          <ArrowLeft className="text-white w-7 h-7" />
+      <header style={{ width: '100%', maxWidth: 420, display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: 80, paddingTop: 16 }}>
+        <button onClick={handleGoBack} style={{ background: 'transparent', border: 'none', padding: 8, cursor: 'pointer' }}>
+          <ArrowLeft color="#fff" size={28} />
         </button>
       </header>
 
@@ -206,24 +206,17 @@ const DepositarScreen: React.FC<{
           Depositar dinero
         </h1>
 
-        <form
-          onSubmit={handleDeposit}
-          className="w-full flex flex-col items-center space-y-8"
-        >
-          <div className="w-full bg-white rounded-[50px] shadow-xl h-[80px] flex items-center justify-center">
+        <form onSubmit={handleDeposit} style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}>
+          <div style={{ width: '100%', backgroundColor: '#fff', borderRadius: 50, boxShadow: '0 10px 30px rgba(0,0,0,0.12)', height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingLeft: 12, paddingRight: 12 }}>
             <input
               type="text"
               value={monto}
               onChange={(e) => handleMontoChange(e.target.value)}
               placeholder="0.00"
-              className="flex-grow p-4 text-center h-full focus:outline-none text-violet-800 font-extrabold placeholder-gray-400"
-              style={{ fontSize: '40px' }}
+              style={{ flexGrow: 1, padding: 16, textAlign: 'center', height: '100%', outline: 'none', color: VIOLET_LEMON, fontWeight: 800, fontSize: 40, border: 'none', background: 'transparent' }}
             />
 
-            <span
-              className="text-violet-800 font-extrabold pr-8"
-              style={{ fontSize: '40px' }}
-            >
+            <span style={{ color: VIOLET_LEMON, fontWeight: 800, paddingRight: 32, fontSize: 40 }}>
               {slice.moneda}
             </span>
           </div>
@@ -231,12 +224,7 @@ const DepositarScreen: React.FC<{
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-[200px] h-[50px] rounded-xl text-lg font-bold transition duration-300 shadow-xl
-            ${
-              isLoading
-                ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
-                : 'bg-yellow-400 text-black hover:bg-yellow-500'
-            }`}
+            style={{ width: 200, height: 50, borderRadius: 12, fontSize: 16, fontWeight: 700, boxShadow: '0 8px 20px rgba(0,0,0,0.12)', border: 'none', backgroundColor: isLoading ? '#9CA3AF' : YELLOW_LEMON, color: isLoading ? '#4B5563' : '#000', cursor: isLoading ? 'not-allowed' : 'pointer' }}
           >
             {isLoading ? 'Depositando...' : 'Depositar fondos'}
           </button>

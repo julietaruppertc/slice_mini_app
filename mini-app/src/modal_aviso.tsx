@@ -41,60 +41,67 @@ const ModalAviso: React.FC<ModalProps> = ({
 
     // --- Lógica de Iconos y Estilos por Tipo ---
     let iconComponent;
-    let iconColor = 'text-gray-900';
-    let buttonStyle = 'bg-yellow-400 hover:bg-yellow-500 text-black';
+    let iconColor = '#111827';
+    let buttonColor = YELLOW_LEMON;
+    let buttonTextColor = '#000';
     let isButtonDisabled = false;
     
     switch (type) {
         case 'success':
-            iconComponent = <CheckCircle className="w-12 h-12" style={{ color: YELLOW_LEMON }} />;
-            iconColor = YELLOW_LEMON;
+            iconComponent = <CheckCircle size={48} color={String(YELLOW_LEMON)} />;
+            iconColor = String(YELLOW_LEMON);
+            buttonColor = YELLOW_LEMON;
+            buttonTextColor = '#000';
             break;
         case 'error':
-            iconComponent = <AlertTriangle className="w-12 h-12 text-red-500" />;
-            iconColor = 'text-red-500';
-            buttonStyle = 'bg-red-500 hover:bg-red-600 text-white';
+            iconComponent = <AlertTriangle size={48} color="#EF4444" />;
+            iconColor = '#EF4444';
+            buttonColor = '#EF4444';
+            buttonTextColor = '#FFF';
             break;
         case 'loading':
-            // Icono de carga giratorio
-            iconComponent = <Loader className="w-12 h-12 text-violet-600 animate-spin" style={{ color: VIOLET_LEMON }} />;
+            // Icono de carga (estático)
+            iconComponent = <Loader size={48} color={String(VIOLET_LEMON)} />;
             iconColor = VIOLET_LEMON;
             isButtonDisabled = true; // Deshabilita el botón durante la carga
-            buttonStyle = 'bg-gray-300 text-gray-500 cursor-not-allowed';
+            buttonColor = '#D1D5DB';
+            buttonTextColor = '#6B7280';
             break;
         case 'custom':
         default:
-            iconComponent = <div className="text-4xl">💡</div>; // Icono por defecto o personalizado
+            iconComponent = <div style={{ fontSize: 28 }}>💡</div>; // Icono por defecto o personalizado
             iconColor = VIOLET_LEMON;
+            buttonColor = YELLOW_LEMON;
+            buttonTextColor = '#000';
             break;
     }
 
     // --- Renderizado del Modal ---
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
-            <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-xs w-full text-center transform transition-transform duration-300 scale-100">
-                
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 50 }}>
+            <div style={{ backgroundColor: '#fff', padding: 32, borderRadius: 24, boxShadow: '0 20px 40px rgba(2,6,23,0.2)', maxWidth: 360, width: '100%', textAlign: 'center', position: 'relative' }}>
+
                 {/* Botón de Cierre (X) */}
                 {onClose && type !== 'loading' && (
-                    <button 
-                        onClick={onClose} 
-                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+                    <button
+                        onClick={onClose}
                         aria-label="Cerrar aviso"
+                        style={{ position: 'absolute', top: 12, right: 12, background: 'transparent', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: 6 }}
                     >
-                        <X className="w-6 h-6" />
+                        <X size={20} color="#9CA3AF" />
                     </button>
                 )}
 
                 {/* Área del Icono */}
-                <div className="flex justify-center mb-4">
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
                     {iconComponent}
                 </div>
 
                 {/* Título y Mensaje */}
-                <h3 className="text-2xl font-bold mb-2" style={{ color: VIOLET_LEMON }}>
+                <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, color: VIOLET_LEMON }}>
                     {title}
                 </h3>
-                <p className="text-gray-600 mb-6 font-medium">
+                <p style={{ color: '#4B5563', marginBottom: 18, fontWeight: 500 }}>
                     {message}
                 </p>
 
@@ -102,17 +109,14 @@ const ModalAviso: React.FC<ModalProps> = ({
                 <button
                     onClick={onConfirm}
                     disabled={isButtonDisabled}
-                    className={`
-                        w-full p-3 rounded-xl text-lg font-semibold transition shadow-md
-                        ${buttonStyle}
-                    `}
+                    style={{ width: '100%', padding: 12, borderRadius: 12, fontSize: 16, fontWeight: 600, boxShadow: '0 8px 20px rgba(2,6,23,0.08)', border: 'none', backgroundColor: isButtonDisabled ? '#D1D5DB' : buttonColor, color: buttonTextColor, cursor: isButtonDisabled ? 'not-allowed' : 'pointer' }}
                 >
                     {buttonText}
                 </button>
-                
+
                 {/* Indicador de Carga */}
                 {type === 'loading' && (
-                    <p className="text-sm mt-3 text-gray-500">
+                    <p style={{ fontSize: 13, marginTop: 12, color: '#6B7280' }}>
                         Por favor, espera...
                     </p>
                 )}
