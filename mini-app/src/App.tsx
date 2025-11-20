@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // Tus imports de estilos y tipos
-import { BG_PURPLE, YELLOW_LEMON, FONT_HEADLINE } from './types';
-import type { DisplaySliceData, SliceData, Screen } from './types';
+import type { DisplaySliceData, Screen } from './types';
+import styles from './appStyles';
 
 // --- IMPORTAR LAS PANTALLAS (Asegurate que las rutas './archivo' sean correctas) ---
 import Inicio from './inicio';
@@ -39,12 +39,10 @@ const App: React.FC = () => {
   switch (currentScreen) {
     case 'splash':
       return (
-        <div className="min-h-screen flex items-center justify-center flex-col animate-pulse" style={{ backgroundColor: BG_PURPLE }}>
+        <div style={styles.container}>
            {/* Si tenés la imagen de la rueda, ponela acá. Si no, dejá este texto o un emoji grande */}
-           <span className="text-8xl mb-4">🍋</span> 
-           <span className="text-5xl font-extrabold" style={{ color: YELLOW_LEMON, fontFamily: FONT_HEADLINE }}>
-            Slice
-          </span>
+           <span style={styles.emoji}>🍋</span>
+           <span style={styles.title}>Slice</span>
         </div>
       );
 

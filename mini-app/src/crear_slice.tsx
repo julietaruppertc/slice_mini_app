@@ -5,6 +5,7 @@ import type { Screen } from './types';
 // 2. CORRECCIÓN: El SDK NO lleva 'type' porque usas las funciones reales
 import { authenticate, deposit, TransactionResult } from './lemon-sdk';
 import { ArrowLeft, ChevronDown } from 'lucide-react'; // Asumo que usas iconos, si no, borra esta línea
+import styles from './crearSliceStyles';
 
 interface CrearSliceProps {
   navigate: (screen: Screen, data?: any) => void;
@@ -115,111 +116,105 @@ const CrearSlice: React.FC<CrearSliceProps> = ({ navigate }) => {
 
  
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col p-4">
+    <div style={styles.container}>
       {/* Header Simple */}
-      <div className="flex items-center mb-6">
-        <button onClick={() => navigate('inicio')} className="p-2 hover:bg-gray-200 rounded-full">
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
+      <div style={styles.headerRow}>
+        <button onClick={() => navigate('inicio')} style={styles.backButton} aria-label="Volver">
+          <ArrowLeft style={styles.icon} />
         </button>
-        <h1 className="text-xl font-bold ml-2 text-gray-800">Nuevo Slice</h1>
+        <h1 style={styles.title}>Nuevo Slice</h1>
       </div>
 
-      <form onSubmit={handleCreateSlice} className="flex-1 flex flex-col gap-4">
-        
+      <form onSubmit={handleCreateSlice} style={styles.form}>
         {/* NOMBRE */}
         <div>
-            <label className="block text-sm font-semibold text-gray-600 mb-1">Nombre del objetivo</label>
-            <input
-                type="text"
-                className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
-                placeholder="Ej: Ahorro PC Gamer"
-                value={formData.nombre}
-                onChange={(e) => handleInputChange('nombre', e.target.value)}
-            />
+          <label style={styles.label}>Nombre del objetivo</label>
+          <input
+            type="text"
+            style={styles.input}
+            placeholder="Ej: Ahorro PC Gamer"
+            value={formData.nombre}
+            onChange={(e) => handleInputChange('nombre', e.target.value)}
+          />
         </div>
 
         {/* MONEDA (SELECT) */}
         <div>
-            <label className="block text-sm font-semibold text-gray-600 mb-1">Moneda</label>
-            <div className="relative">
-                <select
-                    className="w-full p-3 bg-white border border-gray-300 rounded-xl appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    value={formData.moneda}
-                    onChange={(e) => handleInputChange('moneda', e.target.value)}
-                >
-                    <option value="" disabled>Seleccionar moneda</option>
-                    <option value="USDC">USDC</option>
-                    <option value="USDT">USDT</option>
-                    <option value="ETH">ETH</option>
-                    <option value="BTC">BTC</option>
-                    <option value="ARS">Pesos (ARS)</option> 
-                </select>
-                <ChevronDown className="absolute right-3 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />
-            </div>
+          <label style={styles.label}>Moneda</label>
+          <div style={styles.selectWrapper}>
+            <select
+              style={styles.select}
+              value={formData.moneda}
+              onChange={(e) => handleInputChange('moneda', e.target.value)}
+            >
+              <option value="" disabled>Seleccionar moneda</option>
+              <option value="USDC">USDC</option>
+              <option value="USDT">USDT</option>
+              <option value="ETH">ETH</option>
+              <option value="BTC">BTC</option>
+              <option value="ARS">Pesos (ARS)</option>
+            </select>
+            <ChevronDown style={styles.chevron} />
+          </div>
         </div>
 
         {/* META */}
         <div>
-            <label className="block text-sm font-semibold text-gray-600 mb-1">Meta a alcanzar</label>
-            <input
-                type="text"
-                inputMode="decimal"
-                className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
-                placeholder="0.00"
-                value={formData.meta}
-                onChange={(e) => handleInputChange('meta', e.target.value)}
-            />
+          <label style={styles.label}>Meta a alcanzar</label>
+          <input
+            type="text"
+            inputMode="decimal"
+            style={styles.input}
+            placeholder="0.00"
+            value={formData.meta}
+            onChange={(e) => handleInputChange('meta', e.target.value)}
+          />
         </div>
 
         {/* MONTO INICIAL (OPCIONAL) */}
         <div>
-            <label className="block text-sm font-semibold text-gray-600 mb-1">
-                Depósito inicial <span className="font-normal text-gray-400">(Opcional)</span>
-            </label>
-            <input
-                type="text"
-                inputMode="decimal"
-                className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
-                placeholder="0.00"
-                value={formData.montoInicial}
-                onChange={(e) => handleInputChange('montoInicial', e.target.value)}
-            />
-            <p className="text-xs text-gray-400 mt-1">
-                Este monto se descontará de tu wallet Lemon ahora.
-            </p>
+          <label style={styles.label}>
+            Depósito inicial <span style={{ fontWeight: 400, color: '#9ca3af' }}>(Opcional)</span>
+          </label>
+          <input
+            type="text"
+            inputMode="decimal"
+            style={styles.input}
+            placeholder="0.00"
+            value={formData.montoInicial}
+            onChange={(e) => handleInputChange('montoInicial', e.target.value)}
+          />
+          <p style={styles.optionalNote}>
+            Este monto se descontará de tu wallet Lemon ahora.
+          </p>
         </div>
 
         {/* BOTÓN CREAR */}
-        <div className="mt-auto pt-6 pb-4">
-            <button
-                type="submit"
-                disabled={isLoading}
-                className={`w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg transition active:scale-95 ${
-                    isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
-                }`}
-            >
-                {isLoading ? 'Procesando...' : 'Crear Slice'}
-            </button>
+        <div style={styles.footerButtons}>
+          <button
+            type="submit"
+            disabled={isLoading}
+            style={isLoading ? styles.disabledButton : styles.primaryButton}
+          >
+            {isLoading ? 'Procesando...' : 'Crear Slice'}
+          </button>
         </div>
 
       </form>
 
       {/* MODAL DE ÉXITO */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-white w-full max-w-xs p-6 rounded-3xl text-center shadow-2xl transform transition-all scale-100">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <span className="text-3xl">🎉</span>
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard}>
+            <div style={styles.modalIconWrapper}>
+              <span style={{ fontSize: '1.5rem' }}>🎉</span>
             </div>
-            <h2 className="text-2xl font-bold mb-2 text-gray-800">¡Slice Creado!</h2>
-            <p className="text-gray-500 mb-6">
+            <h2 style={styles.modalTitle}>¡Slice Creado!</h2>
+            <p style={styles.modalText}>
               Tu objetivo <strong>{formData.nombre}</strong> ya está en marcha.
             </p>
 
-            <button
-              onClick={handleAceptar}
-              className="w-full bg-gray-900 text-white py-3 rounded-xl font-semibold active:scale-95 transition"
-            >
+            <button onClick={handleAceptar} style={styles.modalButton}>
               Ir al Inicio
             </button>
           </div>

@@ -19,7 +19,7 @@ const SplashScreen: React.FC<{ navigate: (screen: Screen) => void }> = ({ naviga
 
     return (
         <div style={styles.splashContainer}>
-            <p>pepe</p>
+            <img src={lemonSlice} alt="Logo Rodaja de Limón" style={styles.splashLogo} />
         </div>
     );
 };
