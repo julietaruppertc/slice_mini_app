@@ -1,22 +1,38 @@
-import React, { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
-// CORREGIDO: Eliminada la extensión .ts del import para permitir la resolución correcta del módulo
-import { BG_PURPLE, YELLOW_LEMON, FONT_HEADLINE, notifyStorageChange } from './types'; 
-import type { SliceData, Screen } from './types'; 
+import React, { useEffect, useState } from "react";
+import { ArrowLeft } from "lucide-react";
 
-// Componente para mostrar mensajes (éxito y error)
-const MessageModal: React.FC<{ 
-  message: string; 
-  title: string; 
+import {
+  BG_PURPLE,
+  YELLOW_LEMON,
+  FONT_HEADLINE,
+  notifyStorageChange,
+} from "./types";
+import type { SliceData, Screen } from "./types";
+
+// 🍋 LEMON SDK (ÚNICO AGREGADO REAL)
+import {
+  authenticate,
+  withdraw,
+  isWebView,
+  TransactionResult,
+} from "@lemoncash/mini-app-sdk";
+
+// -------------------------------
+//  Modal — SIN CAMBIOS
+// -------------------------------
+const MessageModal: React.FC<{
+  message: string;
+  title: string;
   icon: string;
   buttonText: string;
-  onClose: () => void 
+  onClose: () => void;
 }> = ({ message, title, icon, buttonText, onClose }) => (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
     <div className="bg-white p-6 rounded-3xl shadow-2xl max-w-sm w-full text-center">
       <div className="text-4xl mb-4">{icon}</div>
       <h3 className="text-xl font-bold text-violet-800 mb-2">{title}</h3>
       <p className="text-gray-600 mb-6">{message}</p>
+
       <button
         onClick={onClose}
         className="w-full p-3 rounded-xl bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition"
@@ -27,27 +43,63 @@ const MessageModal: React.FC<{
   </div>
 );
 
-/**
- * Pantalla para retirar fondos de una Slice específica.
- * Recibe los datos de la Slice y una función de navegación.
- */
-const RetirarScreen: React.FC<{ slice: SliceData; navigate: (screen: Screen, data?: SliceData) => void }> = ({ slice, navigate }) => {
-  const [monto, setMonto] = useState<string>('');
+// ===========================================================
+//      RETIRAR SCREEN — ORIGINAL + INTEGRACIÓN LEMON
+// ===========================================================
+const RetirarScreen: React.FC<{
+  slice: SliceData;
+  navigate: (screen: Screen, data?: SliceData) => void;
+}> = ({ slice, navigate }) => {
+  // 🍋 AGREGADO: wallet
+  const [wallet, setWallet] = useState<string | undefined>(undefined);
+
+  // -------------------------
+  // ORIGINAL — NO TOCADO
+  // -------------------------
+  const [monto, setMonto] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  const [modalState, setModalState] = useState<{ visible: boolean, isSuccess: boolean, message: string }>({ visible: false, isSuccess: false, message: '' });
+  const [modalState, setModalState] = useState<{
+    visible: boolean;
+    isSuccess: boolean;
+    message: string;
+  }>({
+    visible: false,
+    isSuccess: false,
+    message: "",
+  });
 
-  // Vuelve a la pantalla de información de la Slice
-  const handleGoBack = () => navigate('info', slice);
+  // 🍋 AUTENTICACIÓN (AGREGADO)
+  const handleAuthentication = async () => {
+    try {
+      const result = await authenticate();
+      if (result.result === TransactionResult.SUCCESS) {
+        setWallet(result.data.wallet);
+      }
+    } catch (err) {
+      console.error("Error autenticación Lemon:", err);
+    }
+  };
 
-  const handleWithdraw = (e: React.FormEvent) => {
+  useEffect(() => {
+    handleAuthentication();
+  }, []);
+
+  // VOLVER — ORIGINAL
+  const handleGoBack = () => navigate("info", slice);
+
+  // =====================================================
+  // 🔵 RETIRO — ORIGINAL + INTEGRACIÓN LEMON ÚNICAMENTE
+  // =====================================================
+  const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault();
     const montoRetiro = parseFloat(monto);
 
+    // VALIDACIONES ORIGINALES
     if (isNaN(montoRetiro) || montoRetiro <= 0) {
       setModalState({
         visible: true,
         isSuccess: false,
-        message: 'Por favor, ingrese un monto de retiro válido.',
+        message: "Por favor, ingrese un monto de retiro válido.",
       });
       return;
     }
@@ -56,133 +108,171 @@ const RetirarScreen: React.FC<{ slice: SliceData; navigate: (screen: Screen, dat
       setModalState({
         visible: true,
         isSuccess: false,
-        message: `El monto a retirar (${montoRetiro.toLocaleString('es-AR')} ${slice.moneda}) supera el monto actual de la reserva (${slice.montoInicial.toLocaleString('es-AR')} ${slice.moneda}).`,
+        message: `El monto a retirar (${montoRetiro.toLocaleString(
+          "es-AR"
+        )} ${slice.moneda}) supera el monto actual (${slice.montoInicial.toLocaleString(
+          "es-AR"
+        )} ${slice.moneda}).`,
+      });
+      return;
+    }
+
+    // 🍋 Validación nueva: wallet requerida
+    if (!wallet) {
+      setModalState({
+        visible: true,
+        isSuccess: false,
+        message:
+          "Debes autenticarte con Lemon antes de realizar un retiro.",
       });
       return;
     }
 
     setIsLoading(true);
 
-    // Lógica para actualizar el monto en LocalStorage (restar)
     try {
-      const existingSlices: SliceData[] = JSON.parse(localStorage.getItem('slices') || '[]');
-      
-      const updatedSlices = existingSlices.map(s => {
-        if (s.id_reserva === slice.id_reserva) {
-          // Disminuye el monto actual (montoInicial) de la Slice
-          const newMonto = s.montoInicial - montoRetiro;
-          return { ...s, montoInicial: newMonto }; 
-        }
-        return s;
+      // 🍋 RETIRO REAL LEMON
+      const result = await withdraw({
+        amount: montoRetiro.toString(),
+        tokenName: slice.moneda as any,
       });
 
-      localStorage.setItem('slices', JSON.stringify(updatedSlices));
-      notifyStorageChange(); // Notifica al Dashboard para que recargue los datos
+      if (result.result !== TransactionResult.SUCCESS) {
+        throw new Error("Error en Lemon");
+      }
 
-      // Simulación de tiempo de carga/API
-      setTimeout(() => {
-        setIsLoading(false);
-        setMonto(''); // Limpiar el input después del éxito
-        setModalState({
-            visible: true,
-            isSuccess: true,
-            message: `Has retirado exitosamente ${montoRetiro.toLocaleString('es-AR')} ${slice.moneda} de la Slice "${slice.nombre}".`,
-        });
-      }, 500);
+      // -----------------------------------
+      // ORIGINAL — actualizar LocalStorage
+      // -----------------------------------
+      const existingSlices: SliceData[] = JSON.parse(
+        localStorage.getItem("slices") || "[]"
+      );
 
+      const updated = existingSlices.map((s) =>
+        s.id_reserva === slice.id_reserva
+          ? { ...s, montoInicial: s.montoInicial - montoRetiro }
+          : s
+      );
+
+      localStorage.setItem("slices", JSON.stringify(updated));
+      notifyStorageChange();
+
+      setIsLoading(false);
+      setMonto("");
+
+      // Modal original + agregado del hash 🍋
+      setModalState({
+        visible: true,
+        isSuccess: true,
+        message: `Has retirado ${montoRetiro.toLocaleString(
+          "es-AR"
+        )} ${slice.moneda}.\n\nHash: ${result.data.txHash}`,
+      });
     } catch (error) {
+      console.error("Error retiro Lemon:", error);
       setIsLoading(false);
       setModalState({
         visible: true,
         isSuccess: false,
-        message: 'Ocurrió un error al intentar retirar los fondos.',
+        message: "Ocurrió un error al procesar el retiro.",
       });
-      console.error('Error al actualizar LocalStorage:', error);
     }
   };
 
+  // ORIGINAL
   const handleMontoChange = (value: string) => {
-    // Permitir solo números y un punto/coma decimal. Reemplaza coma por punto.
-    const cleanValue = value.replace(',', '.');
-    // Regex para permitir números enteros o decimales (punto como separador)
-    if (/^\d*(\.\d*)?$/.test(cleanValue) || cleanValue === '') {
-        setMonto(cleanValue);
+    const clean = value.replace(",", ".");
+    if (/^\d*(\.\d*)?$/.test(clean) || clean === "") {
+      setMonto(clean);
     }
   };
 
+  // ORIGINAL
   const closeModal = () => {
-    setModalState({ visible: false, isSuccess: false, message: '' });
-    // Si fue exitoso, volver a la pantalla anterior
-    if (modalState.isSuccess) {
-        handleGoBack();
-    }
+    const success = modalState.isSuccess;
+
+    setModalState({ visible: false, isSuccess: false, message: "" });
+
+    if (success) handleGoBack();
   };
 
+  // 🍋 Solo MiniApp
+  if (!isWebView()) {
+    return (
+      <div className="text-white p-10 text-center">
+        Esta Mini App solo funciona dentro de Lemon Cash.
+      </div>
+    );
+  }
 
+  // =====================================================
+  // JSX ORIGINAL — NO CAMBIADO
+  // =====================================================
   return (
-    <div className="min-h-screen p-4 flex flex-col items-center" style={{ backgroundColor: BG_PURPLE }}>
+    <div
+      className="min-h-screen p-4 flex flex-col items-center"
+      style={{ backgroundColor: BG_PURPLE }}
+    >
       <header className="w-full max-w-md flex justify-start items-center mb-20 pt-4">
-        <button onClick={handleGoBack} aria-label="Volver atrás"><ArrowLeft className="text-white w-7 h-7" /></button>
+        <button onClick={handleGoBack} aria-label="Volver atrás">
+          <ArrowLeft className="text-white w-7 h-7" />
+        </button>
       </header>
 
       <div className="w-full max-w-md flex flex-col items-center">
-        {/* Título estático: Retirar dinero */}
-        <h1 
+        <h1
           className="text-4xl font-extrabold mb-10 text-center"
-          style={{ 
-            fontSize: '36px', 
-            color: YELLOW_LEMON, 
-            fontFamily: FONT_HEADLINE 
+          style={{
+            fontSize: "36px",
+            color: YELLOW_LEMON,
+            fontFamily: FONT_HEADLINE,
           }}
         >
           Retirar dinero
         </h1>
 
-        <form onSubmit={handleWithdraw} className="w-full flex flex-col items-center space-y-8">
-          
-          {/* Campo Numérico de Retiro (Container Blanco) */}
+        <form
+          onSubmit={handleWithdraw}
+          className="w-full flex flex-col items-center space-y-8"
+        >
           <div className="w-full relative bg-white rounded-[50px] shadow-xl overflow-hidden h-[80px] flex items-center justify-center">
             <input
-              type="text" // Usamos text para controlar la entrada de decimales
+              type="text"
               value={monto}
               onChange={(e) => handleMontoChange(e.target.value)}
               placeholder="0.00"
               autoFocus
               className="flex-grow p-4 text-center h-full focus:outline-none text-violet-800 font-extrabold placeholder-gray-400"
-              style={{ fontSize: '40px' }} // Fuente grande para el monto
+              style={{ fontSize: "40px" }}
             />
-            {/* Abreviatura de la Cripto/Moneda (Variable) */}
-            <span 
+
+            <span
               className="text-violet-800 font-extrabold pr-8"
-              style={{ fontSize: '40px' }}
+              style={{ fontSize: "40px" }}
             >
-                {slice.moneda}
+              {slice.moneda}
             </span>
           </div>
 
-          {/* Botón de Retiro de Fondos */}
           <button
             type="submit"
             disabled={isLoading}
-            className={`
-              w-[200px] h-[50px] rounded-xl text-lg font-bold transition duration-300 shadow-xl
-              ${isLoading
-                ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
-                : 'bg-yellow-400 text-black hover:bg-yellow-500'
-              }
-            `}
+            className={`w-[200px] h-[50px] rounded-xl text-lg font-bold transition duration-300 shadow-xl ${
+              isLoading
+                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                : "bg-yellow-400 text-black hover:bg-yellow-500"
+            }`}
           >
-            {isLoading ? 'Retirando...' : 'Retirar fondos'}
+            {isLoading ? "Retirando..." : "Retirar fondos"}
           </button>
         </form>
       </div>
-      
-      {/* Modal de Mensaje (Éxito o Error) */}
+
       {modalState.visible && (
         <MessageModal
           message={modalState.message}
-          title={modalState.isSuccess ? '¡Operación Exitosa!' : 'Error de Retiro'}
-          icon={modalState.isSuccess ? '🎉' : '⚠️'}
+          title={modalState.isSuccess ? "¡Operación Exitosa!" : "Error de Retiro"}
+          icon={modalState.isSuccess ? "🎉" : "⚠️"}
           buttonText="Entendido"
           onClose={closeModal}
         />

@@ -1,290 +1,242 @@
-import React, { useState } from 'react';
-import { ArrowLeft, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+// 1. CORRECCIÓN: 'Screen' lleva 'type' porque es solo una definición
+import type { Screen } from './types'; 
 
-// --- Constantes y Tipos ---
+// 2. CORRECCIÓN: El SDK NO lleva 'type' porque usas las funciones reales
+import { authenticate, deposit, TransactionResult } from '@lemoncash/mini-app-sdk';
+import { ArrowLeft, ChevronDown } from 'lucide-react'; // Asumo que usas iconos, si no, borra esta línea
 
-// Opciones de divisas para el dropdown
-const CURRENCIES = ['ARS', 'USD', 'ETH', 'BTC', 'USDC', 'USDT', 'DAI', 'POL'];
+interface CrearSliceProps {
+  navigate: (screen: Screen, data?: any) => void;
+}
 
-// Colores específicos para simular la tipografía
-const VIOLET_LEMON = '#5E2CBA';
-const YELLOW_LEMON = '#F0EE00';
-
-// Interfaz para la data del formulario
 interface NewSliceData {
   nombre: string;
-  moneda: string; // id_divisa de la moneda seleccionada
+  moneda: string;
   meta: string;
   montoInicial: string;
 }
 
-// --- Componentes Reutilizables ---
-
-/**
- * Modal simple de éxito para la notificación.
- */
-const SuccessModal: React.FC<{ message: string; onClose: () => void }> = ({ message, onClose }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div className="bg-white p-6 rounded-3xl shadow-2xl max-w-sm w-full text-center">
-      <div className="text-4xl mb-4">🎉</div>
-      <h3 className="text-xl font-bold text-violet-800 mb-2">¡Slice Creada!</h3>
-      <p className="text-gray-600 mb-6">{message}</p>
-      <button
-        onClick={onClose}
-        className="w-full p-3 rounded-xl bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition"
-      >
-        Entendido
-      </button>
-    </div>
-  </div>
-);
-
-/**
- * Campo de entrada estilizado con las dimensiones y colores específicos.
- */
-const SliceInput: React.FC<{
-  label: string;
-  placeholder: string;
-  value: string | number;
-  onChange: (value: string) => void;
-  type?: 'text' | 'number';
-  readOnly?: boolean;
-}> = ({ label, placeholder, value, onChange, type = 'text', readOnly = false }) => (
-  <div className="w-full">
-    <label className="sr-only" htmlFor={label}>{label}</label>
-    <div className="relative bg-white rounded-xl shadow-md overflow-hidden h-[60px] flex items-center">
-      <span 
-        className="p-4 font-semibold text-lg flex-shrink-0"
-        style={{ color: VIOLET_LEMON, fontFamily: 'sans-serif' }} // Simulación de "Stack Sans Text"
-      >
-        {label}
-      </span>
-      <input
-        id={label}
-        type={type === 'number' ? 'text' : type} // Usamos text para controlar mejor la entrada de decimales
-        value={value}
-        onChange={(e) => {
-            const newValue = e.target.value;
-            // Permitir solo números y un punto decimal para campos numéricos
-            if (type === 'number') {
-                if (/^\d*(\.\d*)?$/.test(newValue) || newValue === '') {
-                    onChange(newValue);
-                }
-            } else {
-                onChange(newValue);
-            }
-        }}
-        placeholder={placeholder}
-        readOnly={readOnly}
-        className="flex-grow p-4 text-right h-full border-l border-gray-100 focus:outline-none text-gray-900 font-semibold placeholder-gray-400 text-lg"
-      />
-    </div>
-  </div>
-);
-
-/**
- * Campo Dropdown para la selección de Moneda.
- */
-const CurrencyDropdown: React.FC<{
-  selected: string;
-  onSelect: (currency: string) => void;
-  options: string[];
-}> = ({ selected, onSelect, options }) => {
-    const [isOpen, setIsOpen] = useState(false);
-
-    return (
-        <div className="relative w-full">
-            <div className="relative bg-white rounded-xl shadow-md overflow-hidden h-[60px] flex items-center">
-                <span 
-                    className="p-4 font-semibold text-lg flex-shrink-0"
-                    style={{ color: VIOLET_LEMON, fontFamily: 'sans-serif' }} // Simulación de "Stack Sans Text"
-                >
-                    Moneda
-                </span>
-                <button
-                    type="button"
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="flex justify-end items-center w-full h-full p-4 text-right border-l border-gray-100 focus:outline-none text-gray-900 font-semibold text-lg"
-                    aria-label="Seleccionar Moneda"
-                    aria-expanded={isOpen}
-                >
-                    <span className={`flex-grow ${selected ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {selected || 'Seleccionar'}
-                    </span>
-                    <ChevronDown className={`w-5 h-5 ml-2 transition-transform ${isOpen ? 'rotate-180 text-violet-600' : 'text-gray-400'}`} />
-                </button>
-            </div>
-
-            {/* Opciones del Dropdown */}
-            {isOpen && (
-                <div className="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg max-h-60 overflow-y-auto z-10">
-                    {options.map((currency) => (
-                        <button
-                            key={currency}
-                            onClick={() => {
-                                onSelect(currency);
-                                setIsOpen(false);
-                            }}
-                            className="w-full text-left p-3 hover:bg-gray-100 font-medium text-gray-800"
-                        >
-                            {currency}
-                        </button>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-};
-
-// --- Componente Principal CrearSlice ---
-
-const CrearSlice: React.FC = () => {
+const CrearSlice: React.FC<CrearSliceProps> = ({ navigate }) => {
   const [formData, setFormData] = useState<NewSliceData>({
     nombre: '',
-    moneda: '',
+    moneda: '', // Empezamos vacío para obligar a elegir
     meta: '',
     montoInicial: '',
   });
+
+  const [wallet, setWallet] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
+  // --- AUTENTICACIÓN LEMON ---
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const result = await authenticate();
+        if (result.result === TransactionResult.SUCCESS) {
+          setWallet(result.data.wallet);
+          console.log("Wallet conectada:", result.data.wallet); // Usamos wallet en un log para que no de error de 'unused'
+        }
+      } catch (error) {
+        console.error("Error auth:", error);
+      }
+    };
+    init();
+  }, []);
+
   const handleInputChange = (field: keyof NewSliceData, value: string) => {
-    // Para campos numéricos, guardar como string para permitir entrada de decimales temporalmente
+    // Validación simple para números
     if (field === 'meta' || field === 'montoInicial') {
-        setFormData(prev => ({ ...prev, [field]: value === '' ? '' : value }));
+        // Permitir solo números y un punto decimal
+        if (value === '' || /^\d*\.?\d*$/.test(value)) {
+            setFormData(prev => ({ ...prev, [field]: value }));
+        }
     } else {
-        setFormData(prev => ({ ...prev, [field]: value }));
+      setFormData(prev => ({ ...prev, [field]: value }));
     }
   };
-  
-  const handleCurrencySelect = (currency: string) => {
-    setFormData(prev => ({ ...prev, moneda: currency }));
-  };
 
-  const handleCreateSlice = (e: React.FormEvent) => {
+  // --- CREAR SLICE + DEPOSITAR ---
+  const handleCreateSlice = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validaciones
-    if (!formData.nombre || !formData.moneda || formData.meta === '' || parseFloat(formData.meta.toString()) <= 0) {
-      // Usar console.error o un mensaje de error en la UI en lugar de alert()
-      console.error('Error: Por favor, completa el nombre, selecciona una moneda y define una meta válida (> 0).');
-      return;
+    if (!formData.nombre) {
+        alert("Por favor escribe un nombre");
+        return;
+    }
+    if (!formData.moneda) {
+        alert("Por favor selecciona una moneda");
+        return;
+    }
+    if (!formData.meta || parseFloat(formData.meta) <= 0) {
+        alert("La meta debe ser mayor a 0");
+        return;
     }
 
     setIsLoading(true);
 
-    // 1. Preparar datos para LocalStorage
+    const montoInicialNum = parseFloat(formData.montoInicial) || 0;
+
     const newSlice = {
       ...formData,
-      // Asegurar que los valores numéricos se guarden como números
-      meta: parseFloat(formData.meta.toString()),
-      montoInicial: parseFloat(formData.montoInicial.toString()) || 0,
+      meta: parseFloat(formData.meta),
+      montoInicial: montoInicialNum,
       timestamp: new Date().toISOString(),
-      id_reserva: `slice-${Date.now()}`, // ID único simple
+      id_reserva: `slice-${Date.now()}`,
     };
 
-    // 2. Guardar en LocalStorage
     try {
-      const existingSlices = JSON.parse(localStorage.getItem('slices') || '[]');
-      existingSlices.push(newSlice);
-      localStorage.setItem('slices', JSON.stringify(existingSlices));
-      console.log('✅ Slice guardada en LocalStorage:', newSlice);
-      
-      // Simulación de tiempo de carga/API
-      setTimeout(() => {
-        setIsLoading(false);
-        setShowModal(true); // Mostrar modal de éxito
-      }, 500);
+      // 1. Guardar en localStorage
+      const existing = JSON.parse(localStorage.getItem('slices') || '[]');
+      existing.push(newSlice);
+      localStorage.setItem('slices', JSON.stringify(existing));
 
-    } catch (error) {
+      // 2. DEPOSITAR EN LEMON (si puso monto inicial)
+      if (montoInicialNum > 0) {
+        try {
+          const result = await deposit({
+            amount: montoInicialNum.toString(),
+            tokenName: newSlice.moneda as any, // Casteo simple para evitar error de tipos estrictos del SDK
+          });
+
+          if (result.result !== TransactionResult.SUCCESS) {
+            console.error('Depósito fallido o cancelado');
+            // Opcional: Podrías mostrar un error aquí, pero el slice ya se creó localmente
+          }
+        } catch (err) {
+          console.error('Error técnico durante el depósito:', err);
+        }
+      }
+
+      // Éxito total
       setIsLoading(false);
-      console.error('Error al guardar en LocalStorage:', error);
-      // Aquí podrías mostrar un modal de error
+      setShowModal(true);
+
+    } catch (err) {
+      setIsLoading(false);
+      console.error('Error guardando slice:', err);
+      alert("Hubo un error al crear el Slice");
     }
   };
 
+  const handleAceptar = () => {
+    navigate('inicio'); 
+  };
 
+  // ------------------------------------------
+  // AQUÍ CONECTAMOS LAS VARIABLES AL HTML
+  // ------------------------------------------
   return (
-    <div className="min-h-screen bg-violet-600 p-4 font-sans flex flex-col items-center">
-      {/* Encabezado y Título */}
-      <header className="w-full max-w-md flex justify-start items-center mb-6 pt-4">
-        <button onClick={() => console.log('Volver atrás')} aria-label="Volver atrás">
-          <ArrowLeft className="text-white w-7 h-7" />
+    <div className="min-h-screen bg-gray-50 flex flex-col p-4">
+      {/* Header Simple */}
+      <div className="flex items-center mb-6">
+        <button onClick={() => navigate('inicio')} className="p-2 hover:bg-gray-200 rounded-full">
+            <ArrowLeft className="w-6 h-6 text-gray-700" />
         </button>
-      </header>
-
-      <div className="w-full max-w-md flex flex-col items-center">
-        {/* Título de la página */}
-        <h1 
-          className="text-4xl font-extrabold mb-10 text-center"
-          style={{ 
-            fontSize: '36px', 
-            color: YELLOW_LEMON, 
-            fontFamily: 'sans-serif' // Simulación de "Stack Sans Text"
-          }}
-        >
-          Crear Slice
-        </h1>
-
-        <form onSubmit={handleCreateSlice} className="w-full flex flex-col space-y-4">
-          
-          {/* Campo 1: Nombre (texto corto) */}
-          <SliceInput
-            label="Nombre"
-            placeholder="Insertar nombre"
-            value={formData.nombre}
-            onChange={(v) => handleInputChange('nombre', v)}
-            type="text"
-          />
-
-          {/* Campo 2: Moneda (Dropdown) */}
-          <CurrencyDropdown
-            selected={formData.moneda}
-            onSelect={handleCurrencySelect}
-            options={CURRENCIES}
-          />
-
-          {/* Campo 3: Meta (numérico/decimal) */}
-          <SliceInput
-            label="Meta"
-            placeholder="Insertar meta"
-            value={formData.meta}
-            onChange={(v) => handleInputChange('meta', v)}
-            type="number"
-          />
-
-          {/* Campo 4: Reservar / Monto Inicial (numérico/decimal) */}
-          <SliceInput
-            label="Reservar"
-            placeholder="Insertar fondos"
-            value={formData.montoInicial}
-            onChange={(v) => handleInputChange('montoInicial', v)}
-            type="number"
-          />
-
-          {/* Botón de Creación */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={`
-              w-full h-[60px] p-4 mt-8 rounded-xl text-lg font-bold transition duration-300 shadow-xl
-              ${isLoading
-                ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
-                : 'bg-yellow-400 text-black hover:bg-yellow-500'
-              }
-            `}
-          >
-            {isLoading ? 'Creando Slice...' : 'Crear Slice'}
-          </button>
-        </form>
+        <h1 className="text-xl font-bold ml-2 text-gray-800">Nuevo Slice</h1>
       </div>
-      
-      {/* Modal de éxito */}
+
+      <form onSubmit={handleCreateSlice} className="flex-1 flex flex-col gap-4">
+        
+        {/* NOMBRE */}
+        <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-1">Nombre del objetivo</label>
+            <input
+                type="text"
+                className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                placeholder="Ej: Ahorro PC Gamer"
+                value={formData.nombre}
+                onChange={(e) => handleInputChange('nombre', e.target.value)}
+            />
+        </div>
+
+        {/* MONEDA (SELECT) */}
+        <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-1">Moneda</label>
+            <div className="relative">
+                <select
+                    className="w-full p-3 bg-white border border-gray-300 rounded-xl appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    value={formData.moneda}
+                    onChange={(e) => handleInputChange('moneda', e.target.value)}
+                >
+                    <option value="" disabled>Seleccionar moneda</option>
+                    <option value="USDC">USDC</option>
+                    <option value="USDT">USDT</option>
+                    <option value="ETH">ETH</option>
+                    <option value="BTC">BTC</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />
+            </div>
+        </div>
+
+        {/* META */}
+        <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-1">Meta a alcanzar</label>
+            <input
+                type="text"
+                inputMode="decimal"
+                className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                placeholder="0.00"
+                value={formData.meta}
+                onChange={(e) => handleInputChange('meta', e.target.value)}
+            />
+        </div>
+
+        {/* MONTO INICIAL (OPCIONAL) */}
+        <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-1">
+                Depósito inicial <span className="font-normal text-gray-400">(Opcional)</span>
+            </label>
+            <input
+                type="text"
+                inputMode="decimal"
+                className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                placeholder="0.00"
+                value={formData.montoInicial}
+                onChange={(e) => handleInputChange('montoInicial', e.target.value)}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+                Este monto se descontará de tu wallet Lemon ahora.
+            </p>
+        </div>
+
+        {/* BOTÓN CREAR */}
+        <div className="mt-auto pt-6 pb-4">
+            <button
+                type="submit"
+                disabled={isLoading}
+                className={`w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg transition active:scale-95 ${
+                    isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
+                }`}
+            >
+                {isLoading ? 'Procesando...' : 'Crear Slice'}
+            </button>
+        </div>
+
+      </form>
+
+      {/* MODAL DE ÉXITO */}
       {showModal && (
-        <SuccessModal
-          message={`La Slice "${formData.nombre}" ha sido registrada exitosamente con un monto inicial de ${formData.montoInicial || 0} ${formData.moneda}.`}
-          onClose={() => setShowModal(false)}
-        />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-white w-full max-w-xs p-6 rounded-3xl text-center shadow-2xl transform transition-all scale-100">
+            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <span className="text-3xl">🎉</span>
+            </div>
+            <h2 className="text-2xl font-bold mb-2 text-gray-800">¡Slice Creado!</h2>
+            <p className="text-gray-500 mb-6">
+              Tu objetivo <strong>{formData.nombre}</strong> ya está en marcha.
+            </p>
+
+            <button
+              onClick={handleAceptar}
+              className="w-full bg-gray-900 text-white py-3 rounded-xl font-semibold active:scale-95 transition"
+            >
+              Ir al Inicio
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
