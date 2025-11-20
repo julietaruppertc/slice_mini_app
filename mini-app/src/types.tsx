@@ -20,6 +20,7 @@ export interface SliceData {
 export interface DisplaySliceData extends SliceData {
   monto_actual: number;
   isCrypto: boolean;
+  meta: number;    
   dolar_conversion?: number;
   percentageCompleted: number;
   remainingAmount: number;
