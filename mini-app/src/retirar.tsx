@@ -209,76 +209,73 @@ const RetirarScreen: React.FC<{
   // JSX ORIGINAL — NO CAMBIADO
   // =====================================================
   return (
-    <div
-      className="min-h-screen p-4 flex flex-col items-center"
-      style={{ backgroundColor: BG_PURPLE }}
-    >
-      <header className="w-full max-w-md flex justify-start items-center mb-20 pt-4">
-        <button onClick={handleGoBack} aria-label="Volver atrás">
-          <ArrowLeft className="text-white w-7 h-7" />
-        </button>
-      </header>
+  <div
+    className="min-h-screen p-4 flex flex-col items-center"
+    style={{ backgroundColor: BG_PURPLE }}
+  >
+    <header className="w-full flex justify-start items-center mb-20 pt-4">
+      <button onClick={handleGoBack} aria-label="Volver atrás">
+        <ArrowLeft className="text-white w-7 h-7" />
+      </button>
+    </header>
 
-      <div className="w-full max-w-md flex flex-col items-center">
-        <h1
-          className="text-4xl font-extrabold mb-10 text-center"
-          style={{
-            fontSize: "36px",
-            color: YELLOW_LEMON,
-            fontFamily: FONT_HEADLINE,
-          }}
-        >
-          Retirar dinero
-        </h1>
+    <div className="w-full flex flex-col items-center px-2">
+      <h1
+        className="text-center mb-10 font-extrabold"
+        style={{
+          fontSize: "9vw",
+          color: YELLOW_LEMON,
+          fontFamily: FONT_HEADLINE,
+        }}
+      >
+        Retirar dinero
+      </h1>
 
-        <form
-          onSubmit={handleWithdraw}
-          className="w-full flex flex-col items-center space-y-8"
-        >
-          <div className="w-full relative bg-white rounded-[50px] shadow-xl overflow-hidden h-[80px] flex items-center justify-center">
-            <input
-              type="text"
-              value={monto}
-              onChange={(e) => handleMontoChange(e.target.value)}
-              placeholder="0.00"
-              autoFocus
-              className="flex-grow p-4 text-center h-full focus:outline-none text-violet-800 font-extrabold placeholder-gray-400"
-              style={{ fontSize: "40px" }}
-            />
+      <form
+        onSubmit={handleWithdraw}
+        className="w-full flex flex-col items-center space-y-8"
+      >
+        <div className="w-full relative bg-white rounded-[40px] shadow-xl overflow-hidden py-4 flex items-center justify-center">
+          <input
+            type="text"
+            value={monto}
+            onChange={(e) => handleMontoChange(e.target.value)}
+            placeholder="0.00"
+            autoFocus
+            className="flex-grow text-center focus:outline-none text-violet-800 font-extrabold placeholder-gray-400"
+            style={{ fontSize: "8vw" }}
+          />
 
-            <span
-              className="text-violet-800 font-extrabold pr-8"
-              style={{ fontSize: "40px" }}
-            >
-              {slice.moneda}
-            </span>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={`w-[200px] h-[50px] rounded-xl text-lg font-bold transition duration-300 shadow-xl ${
-              isLoading
-                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                : "bg-yellow-400 text-black hover:bg-yellow-500"
-            }`}
+          <span
+            className="text-violet-800 font-extrabold pr-6"
+            style={{ fontSize: "8vw" }}
           >
-            {isLoading ? "Retirando..." : "Retirar fondos"}
-          </button>
-        </form>
-      </div>
+            {slice.moneda}
+          </span>
+        </div>
 
-      {modalState.visible && (
-        <MessageModal
-          message={modalState.message}
-          title={modalState.isSuccess ? "¡Operación Exitosa!" : "Error de Retiro"}
-          icon={modalState.isSuccess ? "🎉" : "⚠️"}
-          buttonText="Entendido"
-          onClose={closeModal}
-        />
-      )}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className={`w-[200px] h-[50px] rounded-xl text-lg font-bold transition duration-300 shadow-xl ${
+            isLoading
+              ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+              : "bg-yellow-400 text-black hover:bg-yellow-500"
+          }`}
+        >
+          {isLoading ? "Retirando..." : "Retirar fondos"}
+        </button>
+      </form>
     </div>
-  );
-};
 
-export default RetirarScreen;
+    {modalState.visible && (
+      <MessageModal
+        message={modalState.message}
+        title={modalState.isSuccess ? "¡Operación Exitosa!" : "Error de Retiro"}
+        icon={modalState.isSuccess ? "🎉" : "⚠️"}
+        buttonText="Entendido"
+        onClose={closeModal}
+      />
+    )}
+  </div>
+);};
