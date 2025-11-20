@@ -2,16 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { 
   BG_PURPLE, YELLOW_LEMON, VIOLET_LEMON, 
-  FONT_HEADLINE, FONT_SERIF, notifyStorageChange
+  FONT_HEADLINE, FONT_SERIF, notifyStorageChange,
+  // Asumiendo que hay un color para el progreso menor a 100% y un gris para el fondo
+  GRAY_LIGHT, GREEN_SUCCESS 
 } from './types';
 import type { SliceData, DisplaySliceData, Screen } from './types';
 
 
 // Simulación de cotizaciones de criptomonedas (para el cálculo de USD)
 const CRYPTO_PRICES: { [key: string]: number } = {
+  'ARS': 1,
+  'USDC': 1,
   'ETH': 3500, // 1 ETH = 3500 USD
   'BTC': 70000, // 1 BTC = 70000 USD
-  'USDC': 1,
   'USDT': 1,
   'DAI': 1,
   'POL': 0.7, // Ejemplo
@@ -19,13 +22,15 @@ const CRYPTO_PRICES: { [key: string]: number } = {
 
 // Función de utilidad para calcular la DisplaySliceData
 const calculateDisplayData = (slice: SliceData): DisplaySliceData => {
-  const isCrypto = ['ETH', 'BTC', 'USDC', 'USDT', 'DAI', 'POL'].includes(slice.moneda);
+  const isCrypto = ['ARS','ETH', 'BTC', 'USDC', 'USDT', 'DAI', 'POL'].includes(slice.moneda);
   const monto_actual = slice.montoInicial;
   
   let dolar_conversion: number | undefined;
   if (isCrypto) {
     const price = CRYPTO_PRICES[slice.moneda] || 0;
     dolar_conversion = monto_actual * price;
+  } else if (slice.moneda === 'USD') {
+      dolar_conversion = monto_actual;
   }
   
   // Calcular porcentaje completado, asegurando que no exceda el 100%
@@ -46,50 +51,76 @@ const calculateDisplayData = (slice: SliceData): DisplaySliceData => {
   };
 };
 
-// ----------------------------------------------------------------------
-// Componente Tarjeta de Slice
-// ----------------------------------------------------------------------
 
 const SliceCard: React.FC<{ slice: DisplaySliceData; onClick: (slice: DisplaySliceData) => void }> = ({ slice, onClick }) => {
   const { nombre, monto_actual, meta, moneda, percentageCompleted, isCrypto, dolar_conversion } = slice;
 
+  // Formateo del monto principal y meta
+  const formatAmount = (amount: number) => 
+    amount.toLocaleString('es-AR', { maximumFractionDigits: isCrypto ? 3 : 0 });
+
+  // Cálculo del porcentaje para la línea de progreso
+  const progressLine = percentageCompleted.toFixed(0);
+  
+  // Texto de la meta
+  const metaText = `para alcanzar la meta de ${formatAmount(meta)} ${moneda}`;
+  
+  // Cálculo del monto en USD para criptos (como en la imagen de ejemplo)
+  const usdText = (dolar_conversion !== undefined && isCrypto) ? 
+    dolar_conversion.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).replace('$', '').replace(',', '.') : '';
+
+
   return (
     <button 
       onClick={() => onClick(slice)} 
-      className="w-full p-4 bg-white rounded-3xl shadow-xl transition transform hover:scale-[1.02] active:scale-[0.98] text-left"
+      className="w-full p-4 rounded-[30px] shadow-2xl transition transform hover:scale-[1.02] active:scale-[0.98] text-left overflow-hidden"
+      style={{ 
+        backgroundColor: VIOLET_LEMON, 
+        // Desactivamos el autoescalado de texto (si se refiere a que la tarjeta no cambie de tamaño)
+        // El autoescalado de fuente se controla a nivel de CSS global o con la configuración de font-size.
+        // Aquí aseguramos que el padding y tamaño sean fijos.
+      }}
     >
-      <div className="flex justify-between items-start mb-2">
-        <h2 className="text-xl font-bold" style={{ color: VIOLET_LEMON }}>{nombre}</h2>
-        <div className={`px-3 py-1 text-xs font-semibold rounded-full ${percentageCompleted >= 100 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-          {percentageCompleted >= 100 ? '¡Meta!' : `${percentageCompleted.toFixed(0)}%`}
-        </div>
-      </div>
-      
-      {/* Monto principal */}
-      <p className="text-3xl font-extrabold text-gray-800">
-        {monto_actual.toLocaleString('es-AR')} <span className="text-xl font-medium">{moneda}</span>
-      </p>
+      <div className="relative z-10 flex flex-col justify-start items-start">
+        {/* Nombre del Slice */}
+        <h2 className="text-white/80 text-xl font-medium mb-1">{nombre}</h2>
+        
+        {/* Monto principal */}
+        <p 
+          className="text-5xl font-extrabold"
+          style={{ color: YELLOW_LEMON, fontFamily: FONT_SERIF }}
+        >
+          {formatAmount(monto_actual)} <span className="text-3xl font-light">{moneda}</span>
+        </p>
 
-      {/* Conversión y Meta */}
-      <div className="text-sm mt-1 text-gray-500">
+        {/* Conversión a USD (solo para criptos) */}
         {isCrypto && dolar_conversion !== undefined && (
-            <p className="font-medium">{dolar_conversion.toLocaleString('es-AR', { style: 'currency', currency: 'USD' })} USD</p>
+            <p className="text-white/70 text-lg font-medium mt-1 mb-2">
+                {usdText} USD
+            </p>
         )}
-        <p>Meta: {meta.toLocaleString('es-AR')} {moneda}</p>
+        
+        {/* Progreso */}
+        <p className="text-white/70 text-sm mt-2 mb-4">
+            <span className="font-bold">{progressLine}%</span> {metaText}
+        </p>
       </div>
 
-      {/* Barra de Progreso */}
-      <div className="mt-3">
-        <div className="h-1 bg-gray-200 rounded-full">
-          <div
-            className="h-full rounded-full"
-            style={{ 
-              width: `${percentageCompleted}%`, 
-              backgroundColor: percentageCompleted >= 100 ? '#4CAF50' : YELLOW_LEMON 
-            }}
-          ></div>
-        </div>
-      </div>
+      {/* Barra de Progreso - Estilo de la imagen */}
+      <div 
+        className="absolute bottom-0 left-0 h-full rounded-[30px] opacity-20" 
+        style={{ 
+          width: `${percentageCompleted}%`, 
+          backgroundColor: YELLOW_LEMON, 
+          transition: 'width 0.5s ease-in-out'
+        }}
+      ></div>
+      {/* Indicador de meta alcanzada, si se desea un estilo diferente */}
+      {percentageCompleted >= 100 && (
+          <div className="absolute top-0 right-0 m-4 px-3 py-1 text-xs font-semibold rounded-full bg-green-500 text-white">
+              ¡Meta!
+          </div>
+      )}
     </button>
   );
 };
@@ -103,7 +134,7 @@ const InicioScreen: React.FC<{ navigate: (screen: Screen, data?: DisplaySliceDat
   const [slices, setSlices] = useState<DisplaySliceData[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Carga los datos de LocalStorage
+  // ... (loadSlices y useEffect se mantienen iguales)
   const loadSlices = () => {
     setLoading(true);
     try {
@@ -118,31 +149,22 @@ const InicioScreen: React.FC<{ navigate: (screen: Screen, data?: DisplaySliceDat
     }
   };
 
-  // Efecto para cargar datos y escuchar cambios en LocalStorage
   useEffect(() => {
     loadSlices();
-
-    // Escuchar el evento 'storage' para recargar cuando otras pantallas modifiquen los datos
     window.addEventListener('storage', loadSlices);
     return () => {
       window.removeEventListener('storage', loadSlices);
     };
   }, []);
-
-  // Calcula el monto total reservado
+  // ... (totalReservado se mantiene, aunque no se usa en el UI final)
   const totalReservado = slices.reduce((sum, slice) => {
-    // Para simplificar, sumaremos el monto en ARS y el valor en USD de las criptos.
-    // Una aplicación real usaría una moneda base (ej. USD o ARS) para la suma total.
     const value = slice.isCrypto && slice.dolar_conversion !== undefined 
       ? slice.dolar_conversion 
       : slice.monto_actual;
     
-    // Aquí asumimos que las monedas que no son cripto son ARS/USD fijos. 
-    // Si la moneda es ARS, asumimos el valor nominal. Si es USD, sumamos USD.
     if (slice.moneda === 'ARS' || slice.moneda === 'USD') {
         return sum + value;
     }
-    // Si es crypto, sumamos el valor en USD.
     if (slice.isCrypto && slice.dolar_conversion) {
         return sum + slice.dolar_conversion;
     }
@@ -152,47 +174,32 @@ const InicioScreen: React.FC<{ navigate: (screen: Screen, data?: DisplaySliceDat
 
   return (
     <div className="min-h-screen p-4 flex flex-col items-center" style={{ backgroundColor: BG_PURPLE }}>
-      <header className="w-full max-w-md pt-4 mb-8">
+      <header className="w-full max-w-md pt-4 mb-4">
+        {/* Podrías querer un logo o un título simple aquí, aunque no está en la imagen,
+            lo dejo por si el `BG_PURPLE` es parte de un contenedor mayor.
         <h1 
           className="text-5xl font-extrabold text-center"
           style={{ color: YELLOW_LEMON, fontFamily: FONT_HEADLINE }}
         >
           Slice
-        </h1>
+        </h1> */}
       </header>
 
       <div className="w-full max-w-md flex flex-col space-y-6">
         
-        {/* Total Reservado Card */}
-        <div className="p-6 rounded-[50px] shadow-2xl text-center" style={{ backgroundColor: VIOLET_LEMON }}>
-          <p className="text-white/80 text-lg font-medium mb-1 uppercase tracking-wider">Total Reservado</p>
-          <h2 
-            className="text-4xl font-extrabold"
-            style={{ color: YELLOW_LEMON, fontFamily: FONT_SERIF }}
-          >
-            {totalReservado.toLocaleString('es-AR', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD~
-          </h2>
-          <p className="text-white/60 text-xs mt-1">
-            (Valor aproximado en USD)
-          </p>
-        </div>
-
-        {/* Botón Flotante para Crear Slice */}
-        <div className="flex justify-center">
+        {/* Botón Principal para Crear Slice - Estilo de la imagen */}
+        <div className="flex justify-center mb-4">
           <button
             onClick={() => navigate('crear')}
-            className="flex items-center space-x-2 px-6 py-3 rounded-full text-lg font-bold shadow-2xl transition transform hover:scale-105 active:scale-95"
+            className="w-full px-6 py-4 rounded-[20px] text-xl font-extrabold shadow-2xl transition transform hover:scale-[1.01] active:scale-[0.99] uppercase"
             style={{ backgroundColor: YELLOW_LEMON, color: BG_PURPLE }}
           >
-            <Plus className="w-6 h-6" />
             <span>Crear Slice</span>
           </button>
         </div>
 
-
-        {/* Lista de Slices */}
-        <div className="space-y-4 pt-4">
-          <h3 className="text-2xl font-bold text-white mb-4">Mis Reservas</h3>
+        {/* Lista de Slices (Sin el título "Mis Reservas" para seguir el diseño) */}
+        <div className="space-y-4 pt-2">
           {loading ? (
             <p className="text-white/70 text-center">Cargando Slices...</p>
           ) : slices.length === 0 ? (
@@ -210,6 +217,9 @@ const InicioScreen: React.FC<{ navigate: (screen: Screen, data?: DisplaySliceDat
           )}
         </div>
       </div>
+      
+      {/* Espaciado al final */}
+      <div className='pb-10'></div>
     </div>
   );
 };
